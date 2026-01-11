@@ -282,7 +282,7 @@ If you contribute:
 ### Prerequisites
 
 - Python 3.8+
-- PostgreSQL 12+
+- Supabase account (recommended) or PostgreSQL 12+
 - OpenAI API key
 
 ### Quick Start
@@ -300,11 +300,13 @@ python3 -c "import nltk; nltk.download('stopwords')"
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env with your Supabase credentials
 
-# Initialize database
-sudo -u postgres createdb sdg_challenges
-sudo -u postgres psql -d sdg_challenges -f schema.sql
+# Initialize database (Supabase)
+# See SUPABASE_SETUP.md for detailed instructions
+# Or use local PostgreSQL:
+# sudo -u postgres createdb sdg_challenges
+# sudo -u postgres psql -d sdg_challenges -f schema.sql
 
 # Run tests
 python3 test_pipeline.py
@@ -313,14 +315,17 @@ python3 test_pipeline.py
 python3 pipeline.py
 ```
 
-For detailed setup instructions, see [QUICKSTART.md](QUICKSTART.md).
+For detailed setup instructions, see:
+- **Supabase Setup**: [SUPABASE_SETUP.md](SUPABASE_SETUP.md) (recommended)
+- **Quick Start**: [QUICKSTART.md](QUICKSTART.md)
+- **Deployment**: [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
 ## Technical Stack
 
 - **Language**: Python 3.11
-- **Database**: PostgreSQL 14
+- **Database**: Supabase (PostgreSQL 15) or PostgreSQL 14+
 - **LLM**: OpenAI GPT-4.1-mini
 - **Web Scraping**: BeautifulSoup, Requests
 - **PDF Processing**: pdfplumber
@@ -347,7 +352,9 @@ MIT License
 ## Support
 
 - **GitHub Issues**: https://github.com/Lennart1970/sdg-challenge-pipeline/issues
-- **Documentation**: See [QUICKSTART.md](QUICKSTART.md)
+- **Supabase Setup**: See [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
+- **Quick Start**: See [QUICKSTART.md](QUICKSTART.md)
+- **Deployment**: See [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 

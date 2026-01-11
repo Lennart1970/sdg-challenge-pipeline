@@ -1,6 +1,4 @@
-"""
-Database connection and operations module
-"""
+"""\nDatabase connection and operations module\nSupports both local PostgreSQL and Supabase\n"""
 
 import json
 import logging

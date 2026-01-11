@@ -1,11 +1,11 @@
 # Quick Start Guide
 
-Get the SDG Challenge Extraction Pipeline running in 5 minutes.
+Get the SDG Challenge Pipeline running in 5 minutes with Supabase.
 
 ## Prerequisites
 
 - Python 3.8+
-- PostgreSQL 12+
+- Supabase account (free tier works great!)
 - OpenAI API key
 
 ## Installation
@@ -22,6 +22,32 @@ pip install -r requirements.txt
 python3 -c "import nltk; nltk.download('stopwords')"
 ```
 
+## Database Setup (Supabase - Recommended)
+
+### 1. Create Supabase Project
+
+1. Go to [supabase.com](https://supabase.com) and sign up
+2. Click **New Project**
+3. Set name: `sdg-challenge-pipeline`
+4. Generate and save your database password
+5. Choose region closest to you
+6. Click **Create new project** (wait 2-3 minutes)
+
+### 2. Initialize Database
+
+1. In Supabase Dashboard, go to **SQL Editor**
+2. Click **New query**
+3. Copy contents of `schema.sql` from the repository
+4. Paste and click **Run**
+5. Verify tables in **Table Editor**
+
+### 3. Get Connection Details
+
+1. Go to **Settings** → **Database**
+2. Copy the **URI** connection string
+3. Go to **Settings** → **API**
+4. Copy **Project URL** and **anon public** key
+
 ## Configuration
 
 ```bash
@@ -32,22 +58,15 @@ cp .env.example .env
 nano .env
 ```
 
-**Required settings**:
+**Add your credentials**:
 ```env
+# Supabase Database
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres
+SUPABASE_URL=https://[YOUR-PROJECT-REF].supabase.co
+SUPABASE_KEY=your_supabase_anon_key
+
+# OpenAI API
 OPENAI_API_KEY=your_api_key_here
-DB_NAME=sdg_challenges
-DB_USER=postgres
-DB_PASSWORD=
-```
-
-## Database Setup
-
-```bash
-# Create database
-sudo -u postgres createdb sdg_challenges
-
-# Initialize schema
-sudo -u postgres psql -d sdg_challenges -f schema.sql
 ```
 
 ## Run Tests
@@ -80,7 +99,15 @@ This will:
 3. Extract challenges using LLM
 4. Deduplicate and score challenges
 
-## Query Results
+## View Results
+
+### In Supabase Dashboard
+
+1. Go to **Table Editor**
+2. Browse tables: `challenge`, `challenge_score`, `org`
+3. Use **SQL Editor** for custom queries
+
+### Via Python
 
 ```python
 from database import Database
@@ -102,10 +129,37 @@ for c in challenges:
 db.disconnect()
 ```
 
+## Alternative: Local PostgreSQL
+
+If you prefer local PostgreSQL instead of Supabase:
+
+```bash
+# Install PostgreSQL
+sudo apt-get install postgresql postgresql-contrib
+
+# Create database
+sudo -u postgres createdb sdg_challenges
+
+# Initialize schema
+sudo -u postgres psql -d sdg_challenges -f schema.sql
+
+# Update .env
+DB_HOST=localhost
+DB_NAME=sdg_challenges
+DB_USER=postgres
+DB_PASSWORD=
+```
+
 ## Troubleshooting
 
 ### Database connection error
 
+**Supabase**:
+- Check DATABASE_URL format
+- Verify password is correct
+- Ensure project is active in Supabase dashboard
+
+**Local PostgreSQL**:
 ```bash
 # Start PostgreSQL
 sudo service postgresql start
@@ -130,12 +184,18 @@ tail -f pipeline.log
 
 ## Next Steps
 
-- Review `README.md` for full documentation
-- Customize source feeds in `seed_data.json`
-- Adjust scoring weights in `config.py`
-- Add new crawlers in `crawler.py`
+- **Full documentation**: See [README.md](README.md)
+- **Supabase guide**: See [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
+- **Deployment guide**: See [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Customize sources**: Edit `seed_data.json`
+- **Adjust scoring**: Modify weights in `config.py`
 
 ## Support
 
-- GitHub Issues: https://github.com/Lennart1970/sdg-challenge-pipeline/issues
-- Documentation: See `README.md`
+- **Supabase Setup**: See [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
+- **GitHub Issues**: https://github.com/Lennart1970/sdg-challenge-pipeline/issues
+- **Supabase Docs**: https://supabase.com/docs
+
+---
+
+**From zero to running in 5 minutes with Supabase!**
