@@ -253,3 +253,240 @@ class Database:
         if limit:
             query += f" LIMIT {limit}"
         return self.execute(query, fetch=True)
+
+
+    # ==========================================
+    # Technology Discovery Methods
+    # ==========================================
+    
+    def insert_tech_discovery_run(
+        self,
+        challenge_id: int,
+        model_used: str,
+        budget_constraint_eur: int,
+        challenge_summary: str,
+        core_functions: List[str],
+        underlying_principles: List[str],
+        confidence: float,
+        full_response: Dict[str, Any],
+        status: str = 'completed',
+        error_message: Optional[str] = None
+    ) -> int:
+        """
+        Insert a technology discovery run
+        
+        Args:
+            challenge_id: Challenge ID
+            model_used: LLM model used
+            budget_constraint_eur: Budget constraint in euros
+            challenge_summary: Summary of challenge
+            core_functions: List of core functions
+            underlying_principles: List of underlying principles
+            confidence: Confidence score (0-1)
+            full_response: Full JSON response from LLM
+            status: Run status
+            error_message: Optional error message
+            
+        Returns:
+            run_id of inserted discovery run
+        """
+        query = """
+            INSERT INTO tech_discovery_run (
+                challenge_id, model_used, budget_constraint_eur,
+                challenge_summary, core_functions, underlying_principles,
+                confidence, full_response, status, error_message
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING run_id
+        """
+        
+        result = self.execute(
+            query,
+            (
+                challenge_id, model_used, budget_constraint_eur,
+                challenge_summary,
+                json.dumps(core_functions),
+                json.dumps(underlying_principles),
+                confidence,
+                json.dumps(full_response),
+                status,
+                error_message
+            ),
+            fetch=True
+        )
+        
+        run_id = result[0]['run_id']
+        logger.info(f"Inserted tech discovery run: {run_id}")
+        return run_id
+    
+    def insert_tech_path(
+        self,
+        run_id: int,
+        challenge_id: int,
+        path_name: str,
+        path_order: int,
+        principles_used: List[str],
+        technology_classes: List[str],
+        why_plausible: str,
+        estimated_cost_band_eur: str,
+        risks_and_unknowns: List[str]
+    ) -> int:
+        """
+        Insert a technology path
+        
+        Args:
+            run_id: Discovery run ID
+            challenge_id: Challenge ID
+            path_name: Name of the path
+            path_order: Order in discovery result
+            principles_used: List of principles used
+            technology_classes: List of technology classes
+            why_plausible: Explanation of plausibility
+            estimated_cost_band_eur: Cost band string
+            risks_and_unknowns: List of risks
+            
+        Returns:
+            path_id of inserted path
+        """
+        query = """
+            INSERT INTO tech_path (
+                run_id, challenge_id, path_name, path_order,
+                principles_used, technology_classes, why_plausible,
+                estimated_cost_band_eur, risks_and_unknowns
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING path_id
+        """
+        
+        result = self.execute(
+            query,
+            (
+                run_id, challenge_id, path_name, path_order,
+                json.dumps(principles_used),
+                json.dumps(technology_classes),
+                why_plausible,
+                estimated_cost_band_eur,
+                json.dumps(risks_and_unknowns)
+            ),
+            fetch=True
+        )
+        
+        path_id = result[0]['path_id']
+        logger.info(f"Inserted tech path: {path_id}")
+        return path_id
+    
+    def get_tech_discovery_runs(
+        self,
+        challenge_id: Optional[int] = None,
+        status: Optional[str] = None,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Get technology discovery runs
+        
+        Args:
+            challenge_id: Optional filter by challenge ID
+            status: Optional filter by status
+            limit: Maximum number of results
+            
+        Returns:
+            List of discovery run dictionaries
+        """
+        conditions = []
+        params = []
+        
+        if challenge_id is not None:
+            conditions.append("challenge_id = %s")
+            params.append(challenge_id)
+        
+        if status is not None:
+            conditions.append("status = %s")
+            params.append(status)
+        
+        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+        params.append(limit)
+        
+        query = f"""
+            SELECT * FROM tech_discovery_run
+            {where_clause}
+            ORDER BY discovered_at DESC
+            LIMIT %s
+        """
+        
+        return self.execute(query, tuple(params), fetch=True)
+    
+    def get_tech_paths(
+        self,
+        run_id: Optional[int] = None,
+        challenge_id: Optional[int] = None,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Get technology paths
+        
+        Args:
+            run_id: Optional filter by run ID
+            challenge_id: Optional filter by challenge ID
+            limit: Maximum number of results
+            
+        Returns:
+            List of tech path dictionaries
+        """
+        conditions = []
+        params = []
+        
+        if run_id is not None:
+            conditions.append("run_id = %s")
+            params.append(run_id)
+        
+        if challenge_id is not None:
+            conditions.append("challenge_id = %s")
+            params.append(challenge_id)
+        
+        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+        params.append(limit)
+        
+        query = f"""
+            SELECT * FROM tech_path
+            {where_clause}
+            ORDER BY run_id DESC, path_order ASC
+            LIMIT %s
+        """
+        
+        return self.execute(query, tuple(params), fetch=True)
+    
+    def get_challenge_with_paths(self, challenge_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a challenge with all its technology paths
+        
+        Args:
+            challenge_id: Challenge ID
+            
+        Returns:
+            Dictionary with challenge and paths, or None if not found
+        """
+        # Get challenge
+        challenge = self.execute(
+            "SELECT * FROM challenge WHERE challenge_id = %s",
+            (challenge_id,),
+            fetch=True
+        )
+        
+        if not challenge:
+            return None
+        
+        challenge_data = dict(challenge[0])
+        
+        # Get latest discovery run
+        runs = self.get_tech_discovery_runs(challenge_id=challenge_id, limit=1)
+        
+        if runs:
+            run = runs[0]
+            challenge_data['latest_discovery_run'] = dict(run)
+            
+            # Get paths for this run
+            paths = self.get_tech_paths(run_id=run['run_id'])
+            challenge_data['technology_paths'] = [dict(p) for p in paths]
+        else:
+            challenge_data['latest_discovery_run'] = None
+            challenge_data['technology_paths'] = []
+        
+        return challenge_data

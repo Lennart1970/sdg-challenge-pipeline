@@ -91,6 +91,41 @@ Low-grade wool waste
 
 ---
 
+## Two-Agent Architecture
+
+### Agent 1: Challenge Extractor ✅
+
+**Purpose**: Extract solution-free challenges from SDG documents
+
+**Input**: UN reports, MDB documents, EU projects, government portals, NGO reports
+
+**Output**: Structured challenges in database
+
+**Key Features**:
+- LLM-powered extraction with solution filtering
+- Intelligent deduplication
+- Multi-dimensional scoring
+- 18 pre-configured source feeds
+
+### Agent 2: Technology Discovery ✅
+
+**Purpose**: Discover plausible technology paths for challenges
+
+**Input**: Challenge statement + €10k budget constraint
+
+**Output**: 2-3 technology paths with cost bands and risks
+
+**Key Features**:
+- OpenAI Responses API with Structured Outputs
+- Functions → Principles → Technology Classes reasoning
+- No brands or products (technology classes only)
+- Budget constraint validation
+- Full traceability in database
+
+**See**: [TECH_DISCOVERY.md](TECH_DISCOVERY.md) for complete guide
+
+---
+
 ## What the System Explicitly Does NOT Do
 
 ❌ Recommend products  
@@ -352,6 +387,7 @@ MIT License
 ## Support
 
 - **GitHub Issues**: https://github.com/Lennart1970/sdg-challenge-pipeline/issues
+- **Technology Discovery**: See [TECH_DISCOVERY.md](TECH_DISCOVERY.md)
 - **Supabase Setup**: See [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
 - **Quick Start**: See [QUICKSTART.md](QUICKSTART.md)
 - **Deployment**: See [DEPLOYMENT.md](DEPLOYMENT.md)
